@@ -5,24 +5,7 @@ import { round, score } from './score.js';
  */
 const dir = '/data';
 
-async function fetchBannedUsers() {
-    try {
-        const result = await fetch(`${dir}/_bannedUsers.json`);
-        if (!result.ok) {
-            const errorText = await result.text();
-            throw new Error(`Failed to fetch _bannedUsers.json: ${result.status} ${result.statusText}. Response: ${errorText}`);
-        }
-        const responseText = await result.text();
-        const bannedData = JSON.parse(responseText);
-        const bannedUsers = (bannedData.bannedRecords || []).concat(bannedData.bannedCreators || []);
-        
-        console.log('Parsed banned users:', bannedUsers); // Log parsed banned users
-        return bannedUsers;
-    } catch (error) {
-        console.error('Error fetching banned users:', error);
-        return [];
-    }
-}
+
 
 export async function fetchList() {
     try {
@@ -43,12 +26,7 @@ export async function fetchList() {
                     const level = await levelResult.json();
 
                     // Fetch banned users
-                    const bannedUsers = await fetchBannedUsers();
-                    if (bannedUsers.length !== 0) {
-                        level.records = level.records.filter(
-                            (record) => !bannedUsers.includes(record.user)
-                        );
-                    } 
+                    
                     // Remove records from banned users
                     
 
@@ -88,7 +66,7 @@ export async function fetchEditors() {
 }
 
 export async function fetchLeaderboard() {
-    const bannedUsers = await fetchBannedUsers();
+    
     const list = await fetchList();
 
     if (!list) {
@@ -103,27 +81,16 @@ export async function fetchLeaderboard() {
             return;
         }
 
-        // Remove records from banned users
-        if (bannedUsers.length !== 0) {
-        level.records = level.records.filter(
-            (record) => !bannedUsers.includes(record.user)
-        );
-    }
+        
 
-        console.log(`Level: ${level.name}, Records after filtering:`, level.records); // Logging filtered records
+       
 
         // Check if verifier is banned
         let verifier = Object.keys(scoreMap).find(
             (u) => u.toLowerCase() === level.verifier.toLowerCase(),
         ) || level.verifier;
 
-        if (bannedUsers.includes(verifier)) {
-            if (level.records.length > 0) {
-                verifier = level.records[0].user;
-            } else {
-                return;
-            }
-        }
+       
 
         scoreMap[verifier] ??= {
             verified: [],
@@ -144,7 +111,7 @@ export async function fetchLeaderboard() {
                 (u) => u.toLowerCase() === record.user.toLowerCase(),
             ) || record.user;
 
-            if (bannedUsers.includes(user)) return;
+            
 
             scoreMap[user] ??= {
                 verified: [],
